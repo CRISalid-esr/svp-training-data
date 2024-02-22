@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "svp-training-data"
+version = "0.1.0"
+description = ""
+authors = ["jdp1ps <joachim.dornbusch@univ-paris1.fr>"]
+readme = "README.md"
+repository = "https://github.com/CRISalid-esr/svp-training-data"
+packages = [{include = "svp_training_data"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aio-pika = "^9.4.0"
+langchain = "^0.1.7"
+sentence-transformers = "^2.3.1"
+elasticsearch = "^8.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
