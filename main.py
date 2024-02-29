@@ -67,7 +67,8 @@ def handle_message(message: aio_pika.IncomingMessage):
 
 
 def extract_information(message) -> tuple[Entity, Reference]:
-    parsed_json = ast.literal_eval(message.body.decode("utf-8"))
+    string_to_parse = message.body.decode("utf-8")
+    parsed_json = json.loads(string_to_parse)
     reference_json = parsed_json['reference_event']['reference']
     entity_json = parsed_json['entity']
     entity = Entity(**entity_json)
