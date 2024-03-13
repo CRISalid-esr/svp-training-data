@@ -9,6 +9,9 @@ from aio_pika import ExchangeType
 from commons.models import Entity, Reference, Contribution, Contributor
 from strategies.notice_semantic_similarity_strategy import NoticeSemanticSimilarityStrategy
 from strategies.title_semantic_similarity_strategy import TitleSemanticSimilarityStrategy
+from strategies.elastic_similarity_strategy import ElasticSimilarityStrategy
+from strategies.elastic_title_fuzziness_similarity_strategy import ElasticTitleFuzzinessSimilarityStrategy
+from strategies.elastic_abstract_fuzziness_similarity_strategy import ElasticAbstractFuzzinessSimilarityStrategy
 
 EXCHANGE_NAME = "publications"
 
@@ -19,8 +22,12 @@ QUEUE_TOPIC = "event.references.reference.*"
 AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
 
 strategies = [
-    NoticeSemanticSimilarityStrategy(),
-    TitleSemanticSimilarityStrategy(),
+    # NoticeSemanticSimilarityStrategy(),
+    # TitleSemanticSimilarityStrategy(),
+    # ElasticSimilarityStrategy(),
+
+    ElasticTitleFuzzinessSimilarityStrategy(),
+    ElasticAbstractFuzzinessSimilarityStrategy()
 ]
 
 
