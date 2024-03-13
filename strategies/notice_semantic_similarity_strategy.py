@@ -69,4 +69,4 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
         return self._add_common_informations(deduplicated_results)
 
     def get_name(self) -> str:
-        return "Notices semantic similarity"
+        return f"Proximité sémantique des notices (seuil : {self.SIMILARITY_THRESHOLD})"

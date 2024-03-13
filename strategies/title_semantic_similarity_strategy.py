@@ -11,7 +11,7 @@ ES_URL = "http://localhost:9200"
 
 
 class TitleSemanticSimilarityStrategy(SimilarityStrategy):
-    SIMILARITY_THRESHOLD = 0.94
+    SIMILARITY_THRESHOLD = 0.95
 
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
@@ -43,4 +43,4 @@ class TitleSemanticSimilarityStrategy(SimilarityStrategy):
         return self._add_common_informations(deduplicated_results)
 
     def get_name(self) -> str:
-        return "Titles semantic similarity"
+        return f"Proximité sémantique des titres (seuil : {self.SIMILARITY_THRESHOLD})"

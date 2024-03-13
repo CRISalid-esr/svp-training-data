@@ -76,9 +76,9 @@ class Reference(BaseModel):
         subtitle_str = ", ".join(subtitle.value for subtitle in self.subtitles)
         abstract_str = ", ".join(abstract.value for abstract in self.abstracts)
         subject_str = ", ".join(subject.pref_labels[0].value for subject in self.subjects)
-        doc_type_str = ", ".join(doc_type.label for doc_type in self.document_type)
+        doc_type_str = ", ".join(list(set(doc_type.label for doc_type in self.document_type)))
         contribution_str = " - ".join(
-            f"{contribution.contributor.name}, role: {contribution.role}"
+            f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
             for contribution in self.contributions
         )
         similarity_strategies_str = ", ".join(self.similarity_strategies)
@@ -112,13 +112,18 @@ class Reference(BaseModel):
             ("Abstract(s)", [abstract.value for abstract in self.abstracts],
              [abstract.value for abstract in other_reference.abstracts]),
             ("Subjects", [", ".join(subject.pref_labels[0].value for subject in self.subjects)],
-             [", ".join(subject.pref_labels[0].value for subject in other_reference.subjects)]),
-            ("Document Type(s)", [doc_type.label for doc_type in self.document_type],
-             [doc_type.label for doc_type in other_reference.document_type]),
+             [", ".join(
+                 subject.pref_labels[0].value if subject.pref_labels else "" for subject in other_reference.subjects)]),
+            ("Document Type(s)", list(set([doc_type.label for doc_type in self.document_type])),
+             list(set([doc_type.label for doc_type in other_reference.document_type]))),
             ("Contributions",
-             [f"{contribution.contributor.name}, role: {contribution.role}" for contribution in self.contributions],
-             [f"{contribution.contributor.name}, role: {contribution.role}" for contribution in
-              other_reference.contributions]),
+             [
+                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
+                 for contribution in self.contributions],
+             [
+                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
+                 for contribution in
+                 other_reference.contributions]),
             ("Origin", [f"{self.harvester} / {self.source_identifier}"],
              [f"{other_reference.harvester} / {other_reference.source_identifier}"])
         ]
@@ -133,14 +138,12 @@ class Reference(BaseModel):
         # Add similarity strategies row
         if other_reference.similarity_strategies:
             table_html += f"    <tr>\n"
-            table_html += f"        <td colspan=\"3\" style=\"text-align: center;\">Similarity Strategies: {', '.join(self.similarity_strategies)}</td>\n"
+            table_html += f"        <td colspan=\"3\" style=\"text-align: center;\">Similarity Strategies: {', '.join(other_reference.similarity_strategies)}</td>\n"
             table_html += "    </tr>\n"
 
         table_html += "</table>\n"
 
         return table_html
-
-
 
 
 class EntityIdentifier(BaseModel):
