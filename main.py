@@ -23,10 +23,9 @@ AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
 strategies = [
     # NoticeSemanticSimilarityStrategy(),
     # TitleSemanticSimilarityStrategy(),
-    # ElasticSimilarityStrategy(),
 
     ElasticTitleFuzzinessSimilarityStrategy(),
-    ElasticAbstractFuzzinessSimilarityStrategy()
+    # ElasticAbstractFuzzinessSimilarityStrategy()
 ]
 
 

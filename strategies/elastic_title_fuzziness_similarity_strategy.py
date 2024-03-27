@@ -198,10 +198,6 @@ class ElasticTitleFuzzinessSimilarityStrategy(SimilarityStrategy):
         """
         identifier = reference.unique_identifier()
         title_values = [title.value for title in reference.titles]
-        abstract_values = [abstract.value for abstract in reference.abstracts]
-        contributor_names = [contribution.contributor.name for contribution in
-                             reference.contributions]
-
         query = {
             "query": {
                 "bool": {
@@ -220,34 +216,7 @@ class ElasticTitleFuzzinessSimilarityStrategy(SimilarityStrategy):
                             }
                         }
                     ],
-                    "should": [
-                        {
-                            "bool": {
-                                "should": [
-                                    {
-                                        "multi_match": {
-                                            "query": abstract_value,
-                                            "fields": ["abstract.value"],
-                                            "fuzziness": "AUTO"
-                                        }
-                                    } for abstract_value in abstract_values
-                                ]
-                            }
-                        },
-                        {
-                            "bool": {
-                                "should": [
-                                    {
-                                        "multi_match": {
-                                            "query": contributor_name,
-                                            "fields": ["contributions.contributor.name"],
-                                            "fuzziness": "AUTO"
-                                        }
-                                    } for contributor_name in contributor_names
-                                ]
-                            }
-                        }
-                    ],
+
                     "must_not": {
                         "term": {
                             "_id": identifier
@@ -256,8 +225,10 @@ class ElasticTitleFuzzinessSimilarityStrategy(SimilarityStrategy):
                 }
             }
         }
-        query_results = self.es.search(index=ES_INDEX, body=query)
-        returned_results = [Reference(**result['_source']) for result in query_results['hits']['hits']]
+
+        min_score = 15
+        query_results = self.es.search(index=ES_INDEX, body=query, min_score=min_score)
+        returned_results = [Reference(**{**result['_source'], 'score': result['_score']}) for result in query_results['hits']['hits']]
         return self._add_common_informations(returned_results)
 
     def get_name(self) -> str:
