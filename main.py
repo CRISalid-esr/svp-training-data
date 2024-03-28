@@ -21,8 +21,8 @@ QUEUE_TOPIC = "event.references.reference.*"
 AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
 
 strategies = [
-    # NoticeSemanticSimilarityStrategy(),
-    # TitleSemanticSimilarityStrategy(),
+    NoticeSemanticSimilarityStrategy(),
+    TitleSemanticSimilarityStrategy(),
 
     ElasticTitleFuzzinessSimilarityStrategy(),
     ElasticAbstractFuzzinessSimilarityStrategy()
