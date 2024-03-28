@@ -25,7 +25,7 @@ strategies = [
     # TitleSemanticSimilarityStrategy(),
 
     ElasticTitleFuzzinessSimilarityStrategy(),
-    # ElasticAbstractFuzzinessSimilarityStrategy()
+    ElasticAbstractFuzzinessSimilarityStrategy()
 ]
 
 
