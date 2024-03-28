@@ -164,7 +164,6 @@ class ElasticAbstractFuzzinessSimilarityStrategy(SimilarityStrategy):
         identifier = reference.unique_identifier()
         returned_results = []
 
-        # TODO: make a variant of the query who take account of some keywords fields
         for abstract in reference.abstracts:
             query = {
                 "query": {
