@@ -67,6 +67,7 @@ class Reference(BaseModel):
     document_type: List[DocumentType]
     contributions: List[Contribution]
     similarity_strategies: List[str] = []
+    score: Optional[float] = None
 
     def unique_identifier(self) -> str:
         return f"{self.harvester}-{self.source_identifier}"
