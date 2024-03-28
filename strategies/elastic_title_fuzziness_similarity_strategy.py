@@ -9,168 +9,131 @@ ES_INDEX = "test_elastic_fuzziness_similarity"
 ES_URL = "http://localhost:9200"
 
 ES_INDEX_MAPPING = {
-
-        "properties": {
-            "abstracts": {
-                "properties": {
-                    "language": {
-                        "type": "keyword",
-                    },
-                    "value": {
-                        "type": "text",
-                        "fields": {
-                            "keyword": {
-                                "type": "keyword",
-                                "ignore_above": 256
-                            }
-                        }
-                    }
-                }
-            },
-            "contributions": {
-                "properties": {
-                    "contributor": {
-                        "properties": {
-                            "name": {
-                                "type": "text",
-                                "fields": {
-                                    "keyword": {
-                                        "type": "keyword",
-                                        "ignore_above": 256
-                                    }
-                                }
+    "properties": {
+        "abstracts": {
+            "properties": {
+                "language": {
+                    "type": "keyword",
+                },
+                "value": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                },
+            }
+        },
+        "contributions": {
+            "properties": {
+                "contributor": {
+                    "properties": {
+                        "name": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {"type": "keyword", "ignore_above": 256}
                             },
-                            "source": {
-                                "type": "keyword",
-                            },
-                            "source_identifier": {
-                                "type": "keyword",
-                            }
-                        }
-                    },
-                    "rank": {
-                        "type": "long"
-                    },
-                    "role": {
-                        "type": "keyword",
-                    }
-                }
-            },
-            "document_type": {
-                "properties": {
-                    "label": {
-                        "type": "keyword",
-                    },
-                    "uri": {
-                        "type": "keyword",
-                    }
-                }
-            },
-            "harvester": {
-                "type": "keyword",
-            },
-            "id": {
-                "type": "keyword",
-            },
-            "identifiers": {
-                "properties": {
-                    "type": {
-                        "type": "keyword",
-                    },
-                    "value": {
-                        "type": "keyword",
-                    }
-                }
-            },
-            "source_identifier": {
-                "type": "keyword",
-            },
-            "subjects": {
-                "properties": {
-                    "alt_labels": {
-                        "properties": {
-                            "language": {
-                                "type": "keyword",
-                            },
-                            "value": {
-                                "type": "text",
-                                "fields": {
-                                    "keyword": {
-                                        "type": "keyword",
-                                        "ignore_above": 256
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "pref_labels": {
-                        "properties": {
-                            "language": {
-                                "type": "text",
-                                "fields": {
-                                    "keyword": {
-                                        "type": "keyword",
-                                        "ignore_above": 256
-                                    }
-                                }
-                            },
-                            "value": {
-                                "type": "text",
-                                "fields": {
-                                    "keyword": {
-                                        "type": "keyword",
-                                        "ignore_above": 256
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "uri": {
-                        "type": "text",
-                        "fields": {
-                            "keyword": {
-                                "type": "keyword",
-                                "ignore_above": 256
-                            }
-                        }
-                    }
-                }
-            },
-            "subtitles": {
-                "properties": {
-                    "language": {
-                        "type": "keyword",
-                    },
-                    "value": {
-                        "type": "text",
-                        "fields": {
-                            "keyword": {
-                                "type": "keyword",
-                                "ignore_above": 256
-                            }
-                        }
+                        },
+                        "source": {
+                            "type": "keyword",
+                        },
+                        "source_identifier": {
+                            "type": "keyword",
+                        },
                     }
                 },
-
-            },
-            "titles": {
-                "properties": {
-                    "language": {
-                        "type": "keyword",
-                    },
-                    "value": {
-                        "type": "text",
-                        "fields": {
-                            "keyword": {
-                                "type": "keyword",
-                                "ignore_above": 256
-                            }
-                        }
-                    }
-                }
+                "rank": {"type": "long"},
+                "role": {
+                    "type": "keyword",
+                },
             }
-        }
-
+        },
+        "document_type": {
+            "properties": {
+                "label": {
+                    "type": "keyword",
+                },
+                "uri": {
+                    "type": "keyword",
+                },
+            }
+        },
+        "harvester": {
+            "type": "keyword",
+        },
+        "id": {
+            "type": "keyword",
+        },
+        "identifiers": {
+            "properties": {
+                "type": {
+                    "type": "keyword",
+                },
+                "value": {
+                    "type": "keyword",
+                },
+            }
+        },
+        "source_identifier": {
+            "type": "keyword",
+        },
+        "subjects": {
+            "properties": {
+                "alt_labels": {
+                    "properties": {
+                        "language": {
+                            "type": "keyword",
+                        },
+                        "value": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {"type": "keyword", "ignore_above": 256}
+                            },
+                        },
+                    }
+                },
+                "pref_labels": {
+                    "properties": {
+                        "language": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {"type": "keyword", "ignore_above": 256}
+                            },
+                        },
+                        "value": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {"type": "keyword", "ignore_above": 256}
+                            },
+                        },
+                    }
+                },
+                "uri": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                },
+            }
+        },
+        "subtitles": {
+            "properties": {
+                "language": {
+                    "type": "keyword",
+                },
+                "value": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                },
+            },
+        },
+        "titles": {
+            "properties": {
+                "language": {
+                    "type": "keyword",
+                },
+                "value": {
+                    "type": "text",
+                    "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                },
+            }
+        },
+    }
 }
 
 
@@ -192,7 +155,9 @@ class ElasticTitleFuzzinessSimilarityStrategy(SimilarityStrategy):
         metadata = reference.dict() | {"id": identifier}
         self.es.index(index=ES_INDEX, id=identifier, body=metadata)
 
-    def get_similar_references(self, entity: Entity, reference: Reference) -> list[Reference]:
+    def get_similar_references(
+        self, entity: Entity, reference: Reference
+    ) -> list[Reference]:
         """
         Get similar references from the elastic search index
         """
@@ -209,26 +174,25 @@ class ElasticTitleFuzzinessSimilarityStrategy(SimilarityStrategy):
                                         "multi_match": {
                                             "query": title_value,
                                             "fields": ["titles.value"],
-                                            "fuzziness": "AUTO"
+                                            "fuzziness": "AUTO",
                                         }
-                                    } for title_value in title_values
+                                    }
+                                    for title_value in title_values
                                 ]
                             }
                         }
                     ],
-
-                    "must_not": {
-                        "term": {
-                            "_id": identifier
-                        }
-                    }
+                    "must_not": {"term": {"_id": identifier}},
                 }
             }
         }
 
-        min_score = 15
+        min_score = 20  # Score set at 20 begin to give good results. The most precise documents are at 30+
         query_results = self.es.search(index=ES_INDEX, body=query, min_score=min_score)
-        returned_results = [Reference(**{**result['_source'], 'score': result['_score']}) for result in query_results['hits']['hits']]
+        returned_results = [
+            Reference(**{**result["_source"], "score": result["_score"]})
+            for result in query_results["hits"]["hits"]
+        ]
         return self._add_common_informations(returned_results)
 
     def get_name(self) -> str:
