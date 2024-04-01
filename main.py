@@ -63,7 +63,7 @@ def handle_message(message: aio_pika.IncomingMessage):
             "reference_2": candidate.dict(),
         }
         with open("data.jsonl", "a") as f:
-            f.write(json.dumps(dict_) + "\n")
+            f.write(json.dumps(dict_, default=str) + "\n")
 
 
 def extract_information(message) -> tuple[Entity, Reference]:
