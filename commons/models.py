@@ -87,6 +87,7 @@ class Reference(BaseModel):
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
     pages: Optional[str] = None
+    score: Optional[float] = None
 
     def unique_identifier(self) -> str:
         return f"{self.harvester}-{self.source_identifier}"
