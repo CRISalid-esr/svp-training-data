@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -25,6 +26,21 @@ class DocumentType(BaseModel):
 class Abstract(BaseModel):
     value: str
     language: Optional[str]
+
+
+class Journal(BaseModel):
+    issn: Optional[str] = None
+    eissn: Optional[str] = None
+    publisher: Optional[str] = None
+    titles: List[str] = []
+
+
+class Issue(BaseModel):
+    volume: Optional[str] = None
+    number: List[str] = []
+    rights: Optional[str] = None
+    date: Optional[datetime] = None
+    journal: Journal
 
 
 class Contributor(BaseModel):
@@ -67,35 +83,14 @@ class Reference(BaseModel):
     document_type: List[DocumentType]
     contributions: List[Contribution]
     similarity_strategies: List[str] = []
+    issued: Optional[datetime] = None
+    created: Optional[datetime] = None
+    issue: Optional[Issue] = None
+    pages: Optional[str] = None
     score: Optional[float] = None
 
     def unique_identifier(self) -> str:
         return f"{self.harvester}-{self.source_identifier}"
-
-    def pretty_representation(self) -> str:
-        title_str = ", ".join(title.value for title in self.titles)
-        subtitle_str = ", ".join(subtitle.value for subtitle in self.subtitles)
-        abstract_str = ", ".join(abstract.value for abstract in self.abstracts)
-        subject_str = ", ".join(subject.pref_labels[0].value for subject in self.subjects)
-        doc_type_str = ", ".join(list(set(doc_type.label for doc_type in self.document_type)))
-        contribution_str = " - ".join(
-            f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
-            for contribution in self.contributions
-        )
-        similarity_strategies_str = ", ".join(self.similarity_strategies)
-
-        representation = (
-            f"Title(s): {title_str}\n"
-            f"Subtitle(s): {subtitle_str}\n"
-            f"Abstract(s): {abstract_str}\n"
-            f"Subjects: {subject_str}\n"
-            f"Document Type(s): {doc_type_str}\n"
-            f"Contributions:\n{contribution_str}\n"
-            f"Origin : {self.harvester} / {self.source_identifier}"
-        )
-        if similarity_strategies_str:
-            representation += f"\nSimilarity Strategies: {similarity_strategies_str}"
-        return representation
 
     def html_comparaison_table(self, other_reference: 'Reference') -> str:
         table_html = "<table class=\"duplicate-comparaison\">\n"
@@ -126,7 +121,21 @@ class Reference(BaseModel):
                  for contribution in
                  other_reference.contributions]),
             ("Origin", [f"{self.harvester} / {self.source_identifier}"],
-             [f"{other_reference.harvester} / {other_reference.source_identifier}"])
+             [f"{other_reference.harvester} / {other_reference.source_identifier}"]),
+            ("Publication Date", [self.issued.strftime("%d-%m-%Y") if self.issued else ""],
+             [other_reference.issued.strftime("%d-%m-%Y") if other_reference.issued else ""]),
+            ("Creation Date", [self.created.strftime("%d-%m-%Y") if self.created else ""],
+             [other_reference.created.strftime("%d-%m-%Y") if other_reference.created else ""]),
+            ("Journal", [
+                f"{self.issue.journal.titles[0]} ({self.issue.journal.issn or 'no issn'})"] if self.issue and self.issue.journal else [],
+             [
+                 f"{other_reference.issue.journal.titles[0]} ({other_reference.issue.journal.issn or 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
+            ("Volume", [self.issue.volume] if self.issue and self.issue.volume else [],
+             [other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
+            ("Number", self.issue.number if self.issue and self.issue.number else [],
+             other_reference.issue.number if other_reference.issue and other_reference.issue.number else []),
+            ("Pages", [self.pages] if self.pages else [], [other_reference.pages] if other_reference.pages else []),
+
         ]
 
         for aspect, values1, values2 in fields:
