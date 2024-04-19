@@ -80,4 +80,4 @@ class TitleSyntacticSimilarityStrategy(ElasticBasicSimilarityStrategy):
                          )
 
     def get_name(self) -> str:
-        return f"Elastic title similarity strategy"
+        return f"Similarité syntaxique des titres"

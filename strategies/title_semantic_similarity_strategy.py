@@ -51,4 +51,4 @@ class TitleSemanticSimilarityStrategy(SimilarityStrategy):
             )
 
     def get_name(self) -> str:
-        return f"Proximité sémantique des titres min : {self.SIMILARITY_THRESHOLD} "
+        return f"Similarité sémantique des titres min : {self.SIMILARITY_THRESHOLD} "

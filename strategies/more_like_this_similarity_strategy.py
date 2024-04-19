@@ -36,4 +36,4 @@ class MoreLikeThisSimilarityStrategy(ElasticBasicSimilarityStrategy):
                 )
 
     def get_name(self) -> str:
-        return f"Elastic more-like-this similarity min : {SCORE_THRESHOLD} "
+        return f"Similarité syntaxique des notices : {SCORE_THRESHOLD} "

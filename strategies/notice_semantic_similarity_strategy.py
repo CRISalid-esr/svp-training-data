@@ -77,4 +77,4 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
             )
 
     def get_name(self) -> str:
-        return f"Proximité sémantique des notices min : {self.SIMILARITY_THRESHOLD} "
+        return f"Similarité sémantique des notices min : {self.SIMILARITY_THRESHOLD} "
