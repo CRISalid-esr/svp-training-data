@@ -1,7 +1,9 @@
+from typing import Generator
+
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 
-from commons.models import Entity, Reference
+from commons.models import Entity, Reference, Result
 from strategies.similarity_strategy import SimilarityStrategy
 
 ES_PASSWORD = "elastic"
@@ -55,18 +57,24 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
         summary = f"{document_types}\n{titles}\n{subtitles}\{contributors}\{abstracts}"
         return summary
 
-    def get_similar_references(self, entity: dict, reference: dict) -> list[Reference]:
+    def get_similar_references(self, entity: dict, reference: dict) -> Generator[Result, None, None]:
         identifier = reference.unique_identifier()
         summary = self._build_summary(entity, reference)
         search_results = self.elastic_vector_search.similarity_search_with_score(summary, k=20)
         filtered_results = [document for document in search_results if document[1] > self.SIMILARITY_THRESHOLD
                             and document[1] < 1
                             and not document[0].metadata['id'] == identifier]
-        converted_results = [Reference(**document[0].metadata) for document in filtered_results]
+        converted_results = [(Reference(**document[0].metadata), document[1]) for document in filtered_results]
         deduplicated_results = [result for result in converted_results if
-                                not self._identifiers_from_same_source(reference, result)
-                                and not self._reference_with_common_identifier(reference, result)]
-        return self._add_common_informations(deduplicated_results)
+                                not self._identifiers_from_same_source(reference, result[0])
+                                and not self._reference_with_common_identifier(reference, result[0])]
+        for result in deduplicated_results:
+            yield Result(
+                reference1=reference,
+                reference2=result[0],
+                scores=[result[1]],
+                similarity_strategies=[self.get_name()]
+            )
 
     def get_name(self) -> str:
-        return f"Proximité sémantique des notices (seuil : {self.SIMILARITY_THRESHOLD})"
+        return f"Proximité sémantique des notices min : {self.SIMILARITY_THRESHOLD} "

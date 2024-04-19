@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
+
 from pydantic import BaseModel
 
 
@@ -29,8 +30,8 @@ class Abstract(BaseModel):
 
 
 class Journal(BaseModel):
-    issn: Optional[str] = None
-    eissn: Optional[str] = None
+    issn: List[str] = []
+    eissn: List[str] = []
     publisher: Optional[str] = None
     titles: List[str] = []
 
@@ -87,12 +88,11 @@ class Reference(BaseModel):
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
     pages: Optional[str] = None
-    score: Optional[float] = None
 
     def unique_identifier(self) -> str:
         return f"{self.harvester}-{self.source_identifier}"
 
-    def html_comparaison_table(self, other_reference: 'Reference') -> str:
+    def html_comparaison_table(self, other_reference: 'Reference', strategies, scores) -> str:
         table_html = "<table class=\"duplicate-comparaison\">\n"
         table_html += "    <tr>\n"
         table_html += "        <th>Field</th>\n"
@@ -127,9 +127,10 @@ class Reference(BaseModel):
             ("Creation Date", [self.created.strftime("%d-%m-%Y") if self.created else ""],
              [other_reference.created.strftime("%d-%m-%Y") if other_reference.created else ""]),
             ("Journal", [
-                f"{self.issue.journal.titles[0]} ({self.issue.journal.issn or 'no issn'})"] if self.issue and self.issue.journal else [],
+                f"{self.issue.journal.titles[0] if self.issue.journal.titles else 'no title'} ({', '.join(self.issue.journal.issn) if self.issue.journal.issn else 'no issn'})"] if self.issue and self.issue.journal else [],
              [
-                 f"{other_reference.issue.journal.titles[0]} ({other_reference.issue.journal.issn or 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
+                 f"{other_reference.issue.journal.titles[0]  if other_reference.issue.journal.titles else 'no title'} ({', '.join(other_reference.issue.journal.issn) if other_reference.issue.journal.issn else 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
+
             ("Volume", [self.issue.volume] if self.issue and self.issue.volume else [],
              [other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
             ("Number", self.issue.number if self.issue and self.issue.number else [],
@@ -146,9 +147,10 @@ class Reference(BaseModel):
             table_html += "    </tr>\n"
 
         # Add similarity strategies row
-        if other_reference.similarity_strategies:
+        if strategies:
             table_html += f"    <tr>\n"
-            table_html += f"        <td colspan=\"3\" style=\"text-align: center;\">Similarity Strategies: {', '.join(other_reference.similarity_strategies)}</td>\n"
+            # display: strategy_name (score), strategy_name (score), ...
+            table_html += f"        <td colspan=\"3\" style=\"text-align: center;\">Similarity Strategies : {', '.join([f'{strat} ({score})' for strat, score in zip(strategies, scores)])}</td>\n"
             table_html += "    </tr>\n"
 
         table_html += "</table>\n"
@@ -164,3 +166,10 @@ class EntityIdentifier(BaseModel):
 class Entity(BaseModel):
     identifiers: List[EntityIdentifier]
     name: str
+
+
+class Result(BaseModel):
+    reference1: Reference
+    reference2: Reference
+    similarity_strategies: List[str]
+    scores: List[float]

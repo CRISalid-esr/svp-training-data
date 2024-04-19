@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from functools import wraps
+from typing import Tuple, Generator
 
-from commons.models import Entity, Reference
+from commons.models import Entity, Reference, Result
 
 
 class SimilarityStrategy(ABC):
@@ -13,7 +14,8 @@ class SimilarityStrategy(ABC):
         pass
 
     @abstractmethod
-    def get_similar_references(self, entity: Entity, reference: Reference) -> list[Reference]:
+    def get_similar_references(self, entity: Entity, reference: Reference) -> Generator[
+        Tuple[Reference, float], None, None]:
         pass
 
     @abstractmethod
@@ -48,8 +50,3 @@ class SimilarityStrategy(ABC):
              for identifier2 in reference2.identifiers]
         )
         return identical
-
-    def _add_common_informations(self, results):
-        for result in results:
-            result.similarity_strategies = [self.get_name()]
-        return results

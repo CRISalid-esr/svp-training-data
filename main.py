@@ -1,16 +1,16 @@
-import ast
 import asyncio
 import json
 from typing import List
 
 import aio_pika
 from aio_pika import ExchangeType
+from strategies.elastic_more_like_this_similarity_strategy import MoreLikeThisSimilarityStrategy
+from strategies.elastic_title_similarity_strategy import TitleSyntacticSimilarityStrategy
 
-from commons.models import Entity, Reference, Contribution, Contributor
+from commons.models import Entity, Reference, Contribution, Contributor, Result
+from simple_duplicate_detector import SimpleDuplicateDetector
 from strategies.notice_semantic_similarity_strategy import NoticeSemanticSimilarityStrategy
 from strategies.title_semantic_similarity_strategy import TitleSemanticSimilarityStrategy
-from strategies.elastic_title_fuzziness_similarity_strategy import ElasticTitleFuzzinessSimilarityStrategy
-from strategies.elastic_abstract_fuzziness_similarity_strategy import ElasticAbstractFuzzinessSimilarityStrategy
 
 EXCHANGE_NAME = "publications"
 
@@ -23,9 +23,8 @@ AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
 strategies = [
     NoticeSemanticSimilarityStrategy(),
     TitleSemanticSimilarityStrategy(),
-
-    ElasticTitleFuzzinessSimilarityStrategy(),
-    ElasticAbstractFuzzinessSimilarityStrategy()
+    TitleSyntacticSimilarityStrategy(),
+    MoreLikeThisSimilarityStrategy()
 ]
 
 
@@ -49,23 +48,26 @@ def handle_message(message: aio_pika.IncomingMessage):
                          contributor=Contributor(name=entity.name, source=entity.identifiers[0].type,
                                                  source_identifier=entity.identifiers[0].value, name_variants=[]))
         ]
-    raw_candidates: List[Reference] = []
+    raw_candidates: List[Result] = []
     for strategy in strategies:
         strategy.load_reference(entity, reference)
         raw_candidates.extend(strategy.get_similar_references(entity, reference))
-    # agregate candidates with same identifier but sum values of the "similarity_strategies" field
+    raw_candidates = [candidate for candidate in raw_candidates if not SimpleDuplicateDetector(candidate.reference1, candidate.reference2).is_duplicate()]
     candidates = {}
     for candidate in raw_candidates:
-        if candidate.unique_identifier() in candidates:
-            candidates[candidate.unique_identifier()].similarity_strategies += candidate.similarity_strategies
+        if candidate.reference2.unique_identifier() in candidates:
+            candidates[
+                candidate.reference2.unique_identifier()].similarity_strategies += candidate.similarity_strategies
+            candidates[candidate.reference2.unique_identifier()].scores += candidate.scores
         else:
-            candidates[candidate.unique_identifier()] = candidate
+            candidates[candidate.reference2.unique_identifier()] = candidate
+
     for identifier, candidate in candidates.items():
         dict_ = {
-            "text": f"{reference.html_comparaison_table(candidate)}",
+            "text": f"{reference.html_comparaison_table(candidate.reference2, candidate.similarity_strategies, candidate.scores)}",
             "entity": entity.dict(),
             "reference_1": reference.dict(),
-            "reference_2": candidate.dict(),
+            "reference_2": candidate.reference2.dict(),
         }
         with open("data.jsonl", "a") as f:
             f.write(json.dumps(dict_, default=str) + "\n")
