@@ -1,13 +1,12 @@
 from typing import Generator
 
 from commons.models import Entity, Reference, Result
-
-from strategies.elastic_basic_similarity_strategy import ElasticBasicSimilarityStrategy
+from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrategy
 
 SCORE_THRESHOLD = 60
 
 
-class MoreLikeThisSimilarityStrategy(ElasticBasicSimilarityStrategy):
+class MoreLikeThisSimilarityStrategy(SyntacticSimilarityStrategy):
     ES_INDEX = "elastic_basic_similarity"
 
     def get_similar_references(

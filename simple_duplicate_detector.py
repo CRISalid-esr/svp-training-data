@@ -14,9 +14,9 @@ class SimpleDuplicateDetector:
     def is_duplicate(self) -> bool:
         if not self.compare_titles():
             return False
-        if not self.compare_abstracts():
+        if self.both_notices_have_abstract() and not self.compare_abstracts():
             return False
-        if not self.compare_document_types():
+        if self.both_notices_have_document_types() and not self.compare_document_types():
             return False
         if not self.compare_contributors():
             return False
@@ -54,3 +54,9 @@ class SimpleDuplicateDetector:
         contributors1 = {self.normalize_text(contrib.contributor.name) for contrib in self.reference1.contributions}
         contributors2 = {self.normalize_text(contrib.contributor.name) for contrib in self.reference2.contributions}
         return contributors1 == contributors2
+
+    def both_notices_have_abstract(self):
+        return self.reference1.abstracts and self.reference2.abstracts
+
+    def both_notices_have_document_types(self):
+        return self.reference1.document_type and self.reference2.document_type

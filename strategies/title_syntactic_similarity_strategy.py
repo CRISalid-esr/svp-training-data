@@ -1,12 +1,12 @@
 from typing import Generator
 
 from commons.models import Entity, Reference, Result
-from strategies.elastic_basic_similarity_strategy import ElasticBasicSimilarityStrategy
+from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrategy
 
 SCORE_THRESHOLD = 200  # Score set at 20 begin to give good results. The most precise documents are at 30+
 
 
-class TitleSyntacticSimilarityStrategy(ElasticBasicSimilarityStrategy):
+class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
     ES_INDEX = "elastic_basic_similarity"
 
     def __init__(self):

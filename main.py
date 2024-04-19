@@ -4,13 +4,13 @@ from typing import List
 
 import aio_pika
 from aio_pika import ExchangeType
-from strategies.elastic_more_like_this_similarity_strategy import MoreLikeThisSimilarityStrategy
-from strategies.elastic_title_similarity_strategy import TitleSyntacticSimilarityStrategy
 
 from commons.models import Entity, Reference, Contribution, Contributor, Result
 from simple_duplicate_detector import SimpleDuplicateDetector
+from strategies.more_like_this_similarity_strategy import MoreLikeThisSimilarityStrategy
 from strategies.notice_semantic_similarity_strategy import NoticeSemanticSimilarityStrategy
 from strategies.title_semantic_similarity_strategy import TitleSemanticSimilarityStrategy
+from strategies.title_syntactic_similarity_strategy import TitleSyntacticSimilarityStrategy
 
 EXCHANGE_NAME = "publications"
 
@@ -52,7 +52,8 @@ def handle_message(message: aio_pika.IncomingMessage):
     for strategy in strategies:
         strategy.load_reference(entity, reference)
         raw_candidates.extend(strategy.get_similar_references(entity, reference))
-    raw_candidates = [candidate for candidate in raw_candidates if not SimpleDuplicateDetector(candidate.reference1, candidate.reference2).is_duplicate()]
+    raw_candidates = [candidate for candidate in raw_candidates if
+                      not SimpleDuplicateDetector(candidate.reference1, candidate.reference2).is_duplicate()]
     candidates = {}
     for candidate in raw_candidates:
         if candidate.reference2.unique_identifier() in candidates:
