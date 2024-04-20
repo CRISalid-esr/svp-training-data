@@ -1029,6 +1029,17 @@ files = [
 ]
 
 [[package]]
+name = "nameparser"
+version = "1.1.3"
+description = "A simple Python module for parsing human names into their individual components."
+optional = false
+python-versions = "*"
+files = [
+    {file = "nameparser-1.1.3-py2.py3-none-any.whl", hash = "sha256:08ccda98681d59751c82052d52f185bc52f99d43e87d46b85c015a9096ecfa66"},
+    {file = "nameparser-1.1.3.tar.gz", hash = "sha256:aa2400ad71ccf8070675b40311a257c934659f91854b154e1ba6c264761c049d"},
+]
+
+[[package]]
 name = "networkx"
 version = "3.2.1"
 description = "Python package for creating and manipulating graphs and networks"
@@ -2525,4 +2536,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4958775eaf181a84cb0279104be07c87e52d545ca62e2b251358420c50fe4c05"
+content-hash = "4cfc5262aab69e5b335fc774455a296a394ab51fc0443895de05431b09c51de0"

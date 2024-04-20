@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
+from nameparser import HumanName
 from pydantic import BaseModel
 
 
@@ -48,6 +49,7 @@ class Contributor(BaseModel):
     source: str
     source_identifier: Optional[str]
     name: str
+    last_name: Optional[str] = None
     name_variants: List[str]
 
 
@@ -88,6 +90,12 @@ class Reference(BaseModel):
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
     pages: Optional[str] = None
+
+    def compute_last_names(self)-> None:
+        #use HumanName to populate the last_name field of each contributor
+        for contribution in self.contributions:
+            if contribution.contributor.name:
+                contribution.contributor.last_name = HumanName(contribution.contributor.name).last
 
     def unique_identifier(self) -> str:
         return f"{self.harvester}-{self.source_identifier}"

@@ -50,6 +50,17 @@ class SyntacticSimilarityStrategy(SimilarityStrategy):
                                     "keyword": {"type": "keyword", "ignore_above": 256}
                                 },
                             },
+                            "last_name": {
+                                "type": "text",
+                                "fields": {
+                                    "normalized": {
+                                        "type": "text",
+                                        "store": "true",
+                                        "analyzer": "custom_analyzer",
+                                        "search_analyzer": "custom_analyzer"
+                                    }
+                                },
+                            },
                             "source": {
                                 "type": "keyword",
                             },
@@ -177,5 +188,6 @@ class SyntacticSimilarityStrategy(SimilarityStrategy):
         Add the reference to the elastic search index
         """
         identifier = reference.unique_identifier()
+        reference.compute_last_names()
         metadata = reference.dict() | {"id": identifier}
         self.es.index(index=self.ES_INDEX, id=identifier, body=metadata)
