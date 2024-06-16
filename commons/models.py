@@ -10,6 +10,10 @@ class ReferenceIdentifier(BaseModel):
     value: str
 
 
+class ReferenceManifestation(BaseModel):
+    page: Optional[str]
+
+
 class Title(BaseModel):
     value: str
     language: Optional[str]
@@ -79,6 +83,7 @@ class Reference(BaseModel):
     source_identifier: str
     harvester: str
     identifiers: List[ReferenceIdentifier]
+    manifestations: Optional[List[ReferenceManifestation]] = []
     titles: List[Title]
     subtitles: List[Subtitle]
     abstracts: List[Abstract]
@@ -115,7 +120,7 @@ class Reference(BaseModel):
              [subtitle.value for subtitle in other_reference.subtitles]),
             ("Abstract(s)", [abstract.value for abstract in self.abstracts],
              [abstract.value for abstract in other_reference.abstracts]),
-            ("Subjects", [", ".join(subject.pref_labels[0].value for subject in self.subjects)],
+            ("Subjects", [", ".join(subject.pref_labels[0].value for subject in self.subjects if len(subject.pref_labels) > 0)],
              [", ".join(
                  subject.pref_labels[0].value if subject.pref_labels else "" for subject in other_reference.subjects)]),
             ("Document Type(s)", list(set([doc_type.label for doc_type in self.document_type])),
@@ -137,14 +142,17 @@ class Reference(BaseModel):
             ("Journal", [
                 f"{self.issue.journal.titles[0] if self.issue.journal.titles else 'no title'} ({', '.join(self.issue.journal.issn) if self.issue.journal.issn else 'no issn'})"] if self.issue and self.issue.journal else [],
              [
-                 f"{other_reference.issue.journal.titles[0]  if other_reference.issue.journal.titles else 'no title'} ({', '.join(other_reference.issue.journal.issn) if other_reference.issue.journal.issn else 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
+                 f"{other_reference.issue.journal.titles[0] if other_reference.issue.journal.titles else 'no title'} ({', '.join(other_reference.issue.journal.issn) if other_reference.issue.journal.issn else 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
 
             ("Volume", [self.issue.volume] if self.issue and self.issue.volume else [],
              [other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
             ("Number", self.issue.number if self.issue and self.issue.number else [],
              other_reference.issue.number if other_reference.issue and other_reference.issue.number else []),
             ("Pages", [self.pages] if self.pages else [], [other_reference.pages] if other_reference.pages else []),
-
+            ("Identifiers", [f"{identifier.type}: {identifier.value}" for identifier in (self.identifiers or [])],
+             [f"{identifier.type}: {identifier.value}" for identifier in (other_reference.identifiers or [])]),
+            ("Manifestations", [f"{manifestation.page}" for manifestation in (self.manifestations or [])],
+             [f"{manifestation.page}" for manifestation in (other_reference.manifestations or [])]),
         ]
 
         for aspect, values1, values2 in fields:

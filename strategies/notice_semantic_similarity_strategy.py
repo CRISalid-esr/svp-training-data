@@ -16,7 +16,7 @@ ES_URL = "http://localhost:9200"
 
 
 class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
-    SIMILARITY_THRESHOLD = 0.95
+    SIMILARITY_THRESHOLD = 0.96
 
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")

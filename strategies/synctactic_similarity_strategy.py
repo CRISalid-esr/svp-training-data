@@ -101,6 +101,19 @@ class SyntacticSimilarityStrategy(SimilarityStrategy):
                     },
                 }
             },
+            "manifestations": {
+                "properties": {
+                    "additional_files": {
+                        "type": "keyword",
+                    },
+                    "download_url": {
+                        "type": "keyword",
+                    },
+                    "page": {
+                        "type": "keyword",
+                    },
+                }
+            },
             "source_identifier": {
                 "type": "keyword",
             },

@@ -3,7 +3,7 @@ from typing import Generator
 from commons.models import Entity, Reference, Result
 from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrategy
 
-SCORE_THRESHOLD = 60
+SCORE_THRESHOLD = 180
 
 
 class MoreLikeThisSimilarityStrategy(SyntacticSimilarityStrategy):
