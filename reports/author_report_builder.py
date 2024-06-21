@@ -125,7 +125,7 @@ class AuthorReportBuilder:
             already_printed.add((visual_ref1, visual_ref2))
             self.report_lines.append(f"\t{border_char * border_length}")
             self.report_lines.append(f"\tPair {i + 1}: {visual_ref1} <---> {visual_ref2}")
-            self.report_lines.append(f"\tIdentifiants: {ref1} <---> {ref2}")
+            self.report_lines.append(f"\tIdentifiers: {ref1} <---> {ref2}")
             self.report_lines.append(f"\t{border_char * border_length}")
 
     def _build_potential_duplicate_chains(self):
@@ -150,8 +150,8 @@ class AuthorReportBuilder:
             visual_chain = list(dict.fromkeys(visual_chain))
 
             self.report_lines.append(f"\t{border_char * border_length}")
-            self.report_lines.append(f"\tChaîne {i + 1} : {chain_separator.join(visual_chain)}")
-            self.report_lines.append(f"\tIdentifiants: {chain_separator.join(chain)}")
+            self.report_lines.append(f"\tChain n°{i + 1} : {chain_separator.join(visual_chain)}")
+            self.report_lines.append(f"\tIdentifiers: {chain_separator.join(chain)}")
             self.report_lines.append(f"\t{border_char * border_length}")
 
         self.report_lines.append("=" * border_length)
