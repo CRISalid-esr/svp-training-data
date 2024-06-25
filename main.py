@@ -87,12 +87,14 @@ def handle_message(message: aio_pika.IncomingMessage):
     for strategy in strategies:
         strategy.load_reference(entity, reference)
         raw_candidates.extend(strategy.get_similar_references(entity, reference))
-    # A candidate may point to a reference that is not already attached to the entity
+    trivial_duplicates = []
     for candidate in raw_candidates:
-        report_builders[main_entity_id].add_reference(candidate.reference2)
-    # Compute trivial duplicates
-    trivial_duplicates = [candidate for candidate in raw_candidates if
-                          SimpleDuplicateDetector(candidate.reference1, candidate.reference2).is_duplicate()]
+        if SimpleDuplicateDetector(candidate.reference1, candidate.reference2).is_duplicate():
+            trivial_duplicates.append(candidate)
+            # A candidate may point to a reference that is not already attached to the entity
+            report_builders[main_entity_id].add_reference(candidate.reference2)
+        else:
+            report_builders[main_entity_id].add_potential_reference(candidate.reference2)
 
     for candidate in trivial_duplicates:
         report_builders[main_entity_id].add_trivial_duplicate(candidate.reference1, candidate.reference2)
@@ -107,6 +109,30 @@ def handle_message(message: aio_pika.IncomingMessage):
     for candidate in raw_candidates:
         report_builders[main_entity_id].add_potential_duplicate(candidate.reference1, candidate.reference2)
 
+    # if one of the references is a thesis from Scanr, with nnt, and the other is from idref, without nnt, but with sudoc equivalent, discard it
+    # as the idref group notices does not copy the nnt identifier from sudoc
+    candidates_with_missing_idref_nnt = []
+    for candidate in raw_candidates:
+        if not (candidate.reference1.harvester == 'Idref' and candidate.reference2.harvester == 'ScanR') and not (
+                candidate.reference1.harvester == 'ScanR' and candidate.reference2.harvester == 'Idref'):
+            continue
+        ref1 = candidate.reference1 if candidate.reference1.harvester == 'Idref' else candidate.reference2
+        ref2 = candidate.reference2 if candidate.reference2.harvester == 'ScanR' else candidate.reference1
+        assert ref1.harvester == 'Idref'
+        assert ref2.harvester == 'ScanR'
+        assert not ref1.source_identifier == ref2.source_identifier
+        # ref1 comes from idref, ref2 from scanr
+        if not ref1.source_identifier.startswith('http://www.idref.fr/'):
+            continue
+        if not ref2.source_identifier.startswith('nnt'):
+            continue
+        # ref1 is missing nnt
+        if any(identifier.type == 'nnt' for identifier in ref1.identifiers):
+            continue
+        candidates_with_missing_idref_nnt.append(candidate)
+
+    raw_candidates = [candidate for candidate in raw_candidates if
+                      candidate not in candidates_with_missing_idref_nnt]
     # Merge similarity strategies and scores for the same reference
     candidates = {}
     for candidate in raw_candidates:

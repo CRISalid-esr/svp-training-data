@@ -10,14 +10,22 @@ class AuthorReportBuilder:
         self.visual_ids = None
         self.entity = entity
         self.references = {}
+        self.potential_references = {}
         self.trivial_duplicates = []
         self.potential_duplicates = []
         self.report_lines = None
         self.potential_duplicates_chains = defaultdict(list)
 
     def add_reference(self, reference: Reference):
+        if reference.unique_identifier() in self.potential_references:
+            self.potential_references.pop(reference.unique_identifier())
         if reference.unique_identifier() not in self.references:
             self.references[reference.unique_identifier()] = reference
+
+    def add_potential_reference(self, reference: Reference):
+        if reference.unique_identifier() not in self.references \
+                and reference.unique_identifier() not in self.potential_references:
+            self.potential_references[reference.unique_identifier()] = reference
 
     def add_trivial_duplicate(self, reference1: Reference, reference2: Reference):
         self.trivial_duplicates.append((reference1.unique_identifier(), reference2.unique_identifier()))
@@ -76,6 +84,7 @@ class AuthorReportBuilder:
         self._print_entity()
         single_references, trivial_groups = self._compute_groups()
         self._print_single_references(single_references)
+        self._print_potential_references()
         self._print_trivial_duplicates(trivial_groups)
         self._print_potential_duplicates()
         potential_duplicate_chains = self._build_potential_duplicate_chains()
@@ -158,6 +167,8 @@ class AuthorReportBuilder:
 
     def _print_trivial_duplicates(self, trivial_groups):
         self.print_subtitle("Trivial Duplicate Groups")
+        self.report_lines.append(
+            "These references can be treated as identical by their identifiers or manifestations.")
         group_number = 1
         for group in trivial_groups:
             self._print_group_header(group_number)
@@ -173,9 +184,22 @@ class AuthorReportBuilder:
 
     def _print_single_references(self, lonely_references):
         self.print_subtitle("Not Duplicated References:")
+        self.report_lines.append(
+            " These references have not been linked to any other for certain.")
         reference_number = 1
         for reference in lonely_references:
             visual_id = f"R{reference_number}"
+            self._print_reference(reference, visual_id)
+            reference_number += 1
+            self.visual_ids[reference.unique_identifier()] = visual_id
+
+    def _print_potential_references(self):
+        self.print_subtitle("Potential References:")
+        self.report_lines.append(
+            "These references are likely to be attached to this author only if potential duplicates are confirmed.")
+        reference_number = 1
+        for reference in self.potential_references.values():
+            visual_id = f"PR{reference_number}"
             self._print_reference(reference, visual_id)
             reference_number += 1
             self.visual_ids[reference.unique_identifier()] = visual_id
