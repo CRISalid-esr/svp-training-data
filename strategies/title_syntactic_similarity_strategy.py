@@ -1,6 +1,7 @@
 from typing import Generator
 
 from commons.models import Entity, Reference, Result
+from strategies.common_titles import common_titles
 from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrategy
 
 
@@ -72,7 +73,7 @@ class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
             reference2 = Reference(**{**result["_source"]})
             # concatenate all string titles from ref1 and ref2
             str_titles = [title.value for title in reference.titles] + [title for title in reference2.titles]
-            if self.common_titles(str_titles):
+            if common_titles(str_titles):
                 continue
             yield Result(reference1=reference,
                          reference2=reference2,
