@@ -5,7 +5,7 @@ from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrateg
 
 
 class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
-    ES_INDEX = "elastic_basic_similarity"
+    ES_INDEX = "elastic_basic_similarity_5"
     LEVENSHTEIN_THRESHOLD = 2
     MEANINGLESS_TITLES = []
     MIN_MEANINGFUL_TITLE_LENGTH = 12
@@ -67,9 +67,15 @@ class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
             else:
                 deduplicated_results_hash[result["_id"]] = result
         deduplicated_results = deduplicated_results_hash.values()
+        # if both document titles and reference titles are in common_titles, the similarity is not relevant : filter the document out
         for result in deduplicated_results:
+            reference2 = Reference(**{**result["_source"]})
+            # concatenate all string titles from ref1 and ref2
+            str_titles = [title.value for title in reference.titles] + [title for title in reference2.titles]
+            if self.common_titles(str_titles):
+                continue
             yield Result(reference1=reference,
-                         reference2=Reference(**{**result["_source"]}),
+                         reference2=reference2,
                          scores=[result["_score"]],
                          similarity_strategies=[self.get_name()]
                          )

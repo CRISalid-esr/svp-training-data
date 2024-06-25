@@ -26,7 +26,8 @@ class SimpleDuplicateDetector:
             return False
         return True
 
-    def normalize_text(self, text: str) -> str:
+    @staticmethod
+    def normalize_text(text: str) -> str:
         # Convert to normalized form, removing accents
         text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8')
 
