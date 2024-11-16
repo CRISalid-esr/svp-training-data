@@ -6,7 +6,7 @@ from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrateg
 
 
 class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
-    ES_INDEX = "elastic_basic_similarity_5"
+    ES_INDEX = "title_syntactic_1"
     LEVENSHTEIN_THRESHOLD = 2
     MEANINGLESS_TITLES = []
     MIN_MEANINGFUL_TITLE_LENGTH = 12
