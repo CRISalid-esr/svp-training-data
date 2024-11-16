@@ -72,7 +72,7 @@ class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
         for result in deduplicated_results:
             reference2 = Reference(**{**result["_source"]})
             # concatenate all string titles from ref1 and ref2
-            str_titles = [title.value for title in reference.titles] + [title for title in reference2.titles]
+            str_titles = [title.value for title in reference.titles] + [title.value for title in reference2.titles]
             if common_titles(str_titles):
                 continue
             yield Result(reference1=reference,

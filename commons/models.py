@@ -78,6 +78,13 @@ class Concept(BaseModel):
     pref_labels: List[PrefLabel]
     alt_labels: List[AltLabel]
 
+class Book(BaseModel):
+    title: str | None = None
+    title_variants: list[str] = []
+    isbn10: str | None = None
+    isbn13: str | None = None
+    publisher: str | None = None
+
 
 class Reference(BaseModel):
     source_identifier: str
@@ -95,6 +102,7 @@ class Reference(BaseModel):
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
     pages: Optional[str] = None
+    book: Optional[Book] = None
 
     def compute_last_names(self)-> None:
         #use HumanName to populate the last_name field of each contributor

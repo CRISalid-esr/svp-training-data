@@ -1,15 +1,14 @@
 import asyncio
 import json
 import os
-from collections import defaultdict
 from datetime import datetime
-from itertools import chain
 from typing import List
 
 import aio_pika
 from aio_pika import ExchangeType
 
 from commons.models import Entity, Reference, Contribution, Contributor, Result
+from exclusion_filter import ExclusionFilter
 from reports.author_report_builder import AuthorReportBuilder
 from simple_duplicate_detector import SimpleDuplicateDetector
 from strategies.more_like_this_similarity_strategy import MoreLikeThisSimilarityStrategy
@@ -18,10 +17,11 @@ from strategies.title_semantic_similarity_strategy import TitleSemanticSimilarit
 from strategies.title_syntactic_similarity_strategy import TitleSyntacticSimilarityStrategy
 
 REPORTS_DIR = "authors"
+DATA_DIR = "data"
 
 EXCHANGE_NAME = "publications"
 
-QUEUE_NAME = "svp-scientific-repo"
+QUEUE_NAME = "crisalid-ikg-publications"
 
 QUEUE_TOPIC = "event.references.reference.*"
 
@@ -40,7 +40,7 @@ report_builders = {}
 
 
 def get_new_filename():
-    return f"data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
+    return f"{DATA_DIR}/data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
 
 
 def open_new_file():
@@ -52,13 +52,18 @@ def open_new_file():
 
 
 async def main() -> None:
-    # create REPORTS_DIR if it does not exist
+    print("creating reports dir")
     if not os.path.exists(REPORTS_DIR):
         os.makedirs(REPORTS_DIR)
+    print("creating data dir")
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
     open_new_file()
     connection = await create_connection()
+    print("connecting")
     async with connection:
         queue = await create_queue(connection)
+        print("waiting for messages")
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 async with message.process():
@@ -69,13 +74,18 @@ def handle_message(message: aio_pika.IncomingMessage):
     global strategies, lines_written, report_builders
     entity, reference = extract_information(message)
     print(reference.titles)
+    if ExclusionFilter(reference).discard():
+        print(f"Reference discarded  {reference.source_identifier}")
+        return
 
     # If the reference has no contributions, we add the entity as an author
     if len(reference.contributions) == 0:
         reference.contributions = [
             Contribution(rank=0, role="Author",
-                         contributor=Contributor(name=entity.name, source=entity.identifiers[0].type,
-                                                 source_identifier=entity.identifiers[0].value, name_variants=[]))
+                         contributor=Contributor(name=entity.name,
+                                                 source=entity.identifiers[0].type,
+                                                 source_identifier=entity.identifiers[0].value,
+                                                 name_variants=[]))
         ]
 
     main_entity_id = AuthorReportBuilder.get_main_entity_id(entity)
@@ -97,23 +107,27 @@ def handle_message(message: aio_pika.IncomingMessage):
             report_builders[main_entity_id].add_potential_reference(candidate.reference2)
 
     for candidate in trivial_duplicates:
-        report_builders[main_entity_id].add_trivial_duplicate(candidate.reference1, candidate.reference2)
+        report_builders[main_entity_id].add_trivial_duplicate(candidate.reference1,
+                                                              candidate.reference2)
 
     # If a candidate is in trivial_duplicates, remove it from raw_candidates
 
     raw_candidates = [candidate for candidate in raw_candidates if
-                      (candidate.reference1.unique_identifier(), candidate.reference2.unique_identifier()) not in
+                      (candidate.reference1.unique_identifier(),
+                       candidate.reference2.unique_identifier()) not in
                       report_builders[main_entity_id].get_trivial_duplicates()]
 
     # if not already present
     for candidate in raw_candidates:
-        report_builders[main_entity_id].add_potential_duplicate(candidate.reference1, candidate.reference2)
+        report_builders[main_entity_id].add_potential_duplicate(candidate.reference1,
+                                                                candidate.reference2)
 
     # if one of the references is a thesis from Scanr, with nnt, and the other is from idref, without nnt, but with sudoc equivalent, discard it
     # as the idref group notices does not copy the nnt identifier from sudoc
     candidates_with_missing_idref_nnt = []
     for candidate in raw_candidates:
-        if not (candidate.reference1.harvester == 'Idref' and candidate.reference2.harvester == 'ScanR') and not (
+        if not (
+                candidate.reference1.harvester == 'Idref' and candidate.reference2.harvester == 'ScanR') and not (
                 candidate.reference1.harvester == 'ScanR' and candidate.reference2.harvester == 'Idref'):
             continue
         ref1 = candidate.reference1 if candidate.reference1.harvester == 'Idref' else candidate.reference2
@@ -164,6 +178,8 @@ def extract_information(message) -> tuple[Entity, Reference]:
     entity_json = parsed_json['entity']
     entity = Entity(**entity_json)
     reference = Reference(**reference_json)
+    if any(["book" in str.lower(doctype.label) for doctype in reference.document_type]):
+        print("Document type is book")
     return entity, reference
 
 
@@ -179,9 +195,11 @@ async def create_queue(connection):
     publication_exchange = await channel.declare_exchange(
         EXCHANGE_NAME,
         ExchangeType.TOPIC,
+        durable=True
     )
-    await channel.set_qos(prefetch_count=10)
-    queue = await channel.declare_queue(QUEUE_NAME, auto_delete=False, exclusive=False)
+    await channel.set_qos(prefetch_count=20)
+    queue = await channel.declare_queue(QUEUE_NAME, auto_delete=False, exclusive=False,
+                                        durable=True)
     await queue.bind(publication_exchange, QUEUE_TOPIC)
     return queue
 
