@@ -1,13 +1,11 @@
 from elasticsearch import Elasticsearch
 
+from commons.es_params import ESParams
 from commons.models import Entity, Reference
 from strategies.similarity_strategy import SimilarityStrategy
 
 
 class SyntacticSimilarityStrategy(SimilarityStrategy):
-    ES_PASSWORD = "elastic"
-    ES_USER = "elastic"
-    ES_URL = "http://localhost:9200"
 
     ES_INDEX_SETTINGS = {
         "analysis": {
@@ -188,13 +186,15 @@ class SyntacticSimilarityStrategy(SimilarityStrategy):
     }
 
     def __init__(self):
+        params = ESParams()
         self.es = Elasticsearch(
-            [self.ES_URL],
-            http_auth=(self.ES_USER, self.ES_PASSWORD),
+            [params.url],
+            http_auth=(params.user, params.password),
             verify_certs=True,
         )
         if not self.es.indices.exists(index=self.ES_INDEX):
-            self.es.indices.create(index=self.ES_INDEX, mappings=self.ES_INDEX_MAPPING, settings=self.ES_INDEX_SETTINGS)
+            self.es.indices.create(index=self.ES_INDEX, mappings=self.ES_INDEX_MAPPING,
+                                   settings=self.ES_INDEX_SETTINGS)
 
     def load_reference(self, entity: Entity, reference: Reference):
         """

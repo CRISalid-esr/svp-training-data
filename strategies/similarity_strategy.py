@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import Tuple, Generator
 
-from commons.models import Entity, Reference, Result
+from commons.models import Entity, Reference
 
 
 class SimilarityStrategy(ABC):
