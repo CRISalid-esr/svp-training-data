@@ -6,7 +6,7 @@ from strategies.synctactic_similarity_strategy import SyntacticSimilarityStrateg
 
 
 class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
-    ES_INDEX = "elastic_basic_similarity_5"
+    ES_INDEX = "title_syntactic_1"
     LEVENSHTEIN_THRESHOLD = 2
     MEANINGLESS_TITLES = []
     MIN_MEANINGFUL_TITLE_LENGTH = 12
@@ -72,7 +72,7 @@ class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
         for result in deduplicated_results:
             reference2 = Reference(**{**result["_source"]})
             # concatenate all string titles from ref1 and ref2
-            str_titles = [title.value for title in reference.titles] + [title for title in reference2.titles]
+            str_titles = [title.value for title in reference.titles] + [title.value for title in reference2.titles]
             if common_titles(str_titles):
                 continue
             yield Result(reference1=reference,

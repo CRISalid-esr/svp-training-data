@@ -10,7 +10,7 @@ ES_PASSWORD = "elastic"
 
 ES_USER = "elastic"
 
-ES_INDEX = "test_ref_vector_index_minilml12v2_notices"
+ES_INDEX = "notices_semantic_minilml12v2_1"
 
 ES_URL = "http://localhost:9200"
 

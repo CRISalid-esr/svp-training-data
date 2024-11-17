@@ -7,7 +7,7 @@ SCORE_THRESHOLD = 180
 
 
 class MoreLikeThisSimilarityStrategy(SyntacticSimilarityStrategy):
-    ES_INDEX = "elastic_basic_similarity"
+    ES_INDEX = "mld_syntactic_1"
 
     def get_similar_references(
             self, entity: Entity, reference: Reference

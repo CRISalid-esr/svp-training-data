@@ -78,6 +78,13 @@ class Concept(BaseModel):
     pref_labels: List[PrefLabel]
     alt_labels: List[AltLabel]
 
+class Book(BaseModel):
+    title: str | None = None
+    title_variants: list[str] = []
+    isbn10: str | None = None
+    isbn13: str | None = None
+    publisher: str | None = None
+
 
 class Reference(BaseModel):
     source_identifier: str
@@ -95,6 +102,7 @@ class Reference(BaseModel):
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
     pages: Optional[str] = None
+    book: Optional[Book] = None
 
     def compute_last_names(self)-> None:
         #use HumanName to populate the last_name field of each contributor
@@ -113,16 +121,44 @@ class Reference(BaseModel):
         table_html += f"        <th>Reference n°2 <span class=\"badge\">{other_reference.harvester}<br/>{other_reference.source_identifier}</span></th>\n"
         table_html += "    </tr>\n"
 
-        # Add rows for each aspect
+        table_html += "    <tr>\n"
+        table_html += "        <td>Identifiers</td>\n"
+        table_html += "        <td>{}</td>\n".format("</br>".join(
+            [f"{identifier.type}: {identifier.value}" for identifier in (self.identifiers or [])]))
+        table_html += "        <td>{}</td>\n".format("</br>".join(
+            [f"{identifier.type}: {identifier.value}" for identifier in
+             (other_reference.identifiers or [])]))
+        table_html += "    </tr>\n"
+
+        # Add ISBN section if applicable
+        def get_isbn_html(reference):
+            if not reference.book:
+                return ""
+            isbn_parts = []
+            if hasattr(reference.book, "isbn10") and reference.book.isbn10:
+                isbn_parts.append(f"ISBN-10: {reference.book.isbn10}")
+            if hasattr(reference.book, "isbn13") and reference.book.isbn13:
+                isbn_parts.append(f"ISBN-13: {reference.book.isbn13}")
+            return "</br>".join(isbn_parts)
+
+        table_html += "    <tr>\n"
+        table_html += "        <td>ISBN</td>\n"
+        table_html += f"        <td>{get_isbn_html(self)}</td>\n"
+        table_html += f"        <td>{get_isbn_html(other_reference)}</td>\n"
+        table_html += "    </tr>\n"
+
+        # Add other fields
         fields = [
-            ("Title(s)", [title.value for title in self.titles], [title.value for title in other_reference.titles]),
+            ("Title(s)", [title.value for title in self.titles],
+             [title.value for title in other_reference.titles]),
             ("Subtitle(s)", [subtitle.value for subtitle in self.subtitles],
              [subtitle.value for subtitle in other_reference.subtitles]),
             ("Abstract(s)", [abstract.value for abstract in self.abstracts],
              [abstract.value for abstract in other_reference.abstracts]),
-            ("Subjects", [", ".join(subject.pref_labels[0].value for subject in self.subjects if len(subject.pref_labels) > 0)],
-             [", ".join(
-                 subject.pref_labels[0].value if subject.pref_labels else "" for subject in other_reference.subjects)]),
+            ("Subjects", [", ".join(subject.pref_labels[0].value for subject in self.subjects if
+                                    len(subject.pref_labels) > 0)],
+             [", ".join(subject.pref_labels[0].value if subject.pref_labels else "" for subject in
+                        other_reference.subjects)]),
             ("Document Type(s)", list(set([doc_type.label for doc_type in self.document_type])),
              list(set([doc_type.label for doc_type in other_reference.document_type]))),
             ("Contributions",
@@ -143,15 +179,15 @@ class Reference(BaseModel):
                 f"{self.issue.journal.titles[0] if self.issue.journal.titles else 'no title'} ({', '.join(self.issue.journal.issn) if self.issue.journal.issn else 'no issn'})"] if self.issue and self.issue.journal else [],
              [
                  f"{other_reference.issue.journal.titles[0] if other_reference.issue.journal.titles else 'no title'} ({', '.join(other_reference.issue.journal.issn) if other_reference.issue.journal.issn else 'no issn'})"] if other_reference.issue and other_reference.issue.journal else []),
-
             ("Volume", [self.issue.volume] if self.issue and self.issue.volume else [],
-             [other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
+             [
+                 other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
             ("Number", self.issue.number if self.issue and self.issue.number else [],
              other_reference.issue.number if other_reference.issue and other_reference.issue.number else []),
-            ("Pages", [self.pages] if self.pages else [], [other_reference.pages] if other_reference.pages else []),
-            ("Identifiers", [f"{identifier.type}: {identifier.value}" for identifier in (self.identifiers or [])],
-             [f"{identifier.type}: {identifier.value}" for identifier in (other_reference.identifiers or [])]),
-            ("Manifestations", [f"{manifestation.page}" for manifestation in (self.manifestations or [])],
+            ("Pages", [self.pages] if self.pages else [],
+             [other_reference.pages] if other_reference.pages else []),
+            ("Manifestations",
+             [f"{manifestation.page}" for manifestation in (self.manifestations or [])],
              [f"{manifestation.page}" for manifestation in (other_reference.manifestations or [])]),
         ]
 
@@ -165,7 +201,6 @@ class Reference(BaseModel):
         # Add similarity strategies row
         if strategies:
             table_html += f"    <tr>\n"
-            # display: strategy_name (score), strategy_name (score), ...
             table_html += f"        <td colspan=\"3\" style=\"text-align: center;\">Similarity Strategies : {', '.join([f'{strat} ({score})' for strat, score in zip(strategies, scores)])}</td>\n"
             table_html += "    </tr>\n"
 

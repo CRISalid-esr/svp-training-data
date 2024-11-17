@@ -1,2 +1,4 @@
 *.jsonl
 .idea
+authors
+csv_data
