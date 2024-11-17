@@ -3,6 +3,7 @@ from typing import Generator
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 
+from commons.es_params import ESParams
 from commons.models import Entity, Reference, Result
 from strategies.similarity_strategy import SimilarityStrategy
 
@@ -15,6 +16,11 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
         es_params = ESParams()
+        print("***********debug info***********")
+        print(es_params.url)
+        print(es_params.user)
+        print(es_params.password)
+        print("***********debug info***********")
         self.elastic_vector_search = ElasticsearchStore(
             es_url=es_params.url,
             index_name=ES_INDEX,
