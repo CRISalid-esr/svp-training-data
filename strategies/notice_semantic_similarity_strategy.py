@@ -1,5 +1,6 @@
 from typing import Generator
 
+from elasticsearch import Elasticsearch
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 
@@ -15,18 +16,16 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
 
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-        es_params = ESParams()
-        print("***********debug info***********")
-        print(es_params.url)
-        print(es_params.user)
-        print(es_params.password)
-        print("***********debug info***********")
+        params = ESParams()
+        es_connection = Elasticsearch(
+            [params.url],
+            http_auth=(params.user, params.password),
+            verify_certs=False,
+        )
         self.elastic_vector_search = ElasticsearchStore(
-            es_url=es_params.url,
             index_name=ES_INDEX,
             embedding=self.embeddings,
-            es_user=es_params.user,
-            es_password=es_params.password
+            es_connection=es_connection
         )
 
     def load_reference(self, entity: Entity, reference: Reference):
