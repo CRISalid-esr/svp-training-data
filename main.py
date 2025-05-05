@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import List
 
 import aio_pika
+import fsspec
 from aio_pika import ExchangeType
 from aiohttp import web
 
@@ -18,11 +19,11 @@ from strategies.title_semantic_similarity_strategy import TitleSemanticSimilarit
 from strategies.title_syntactic_similarity_strategy import TitleSyntacticSimilarityStrategy
 
 REPORTS_DIR = "authors"
-DATA_DIR = "data"
+DEFAULT_DATA_DIR = "data"
 
 EXCHANGE_NAME = "publications"
 
-QUEUE_NAME = "crisalid-ikg-publications"
+QUEUE_NAME = "ctd-publications"
 
 QUEUE_TOPIC = "event.references.reference.*"
 
@@ -68,15 +69,22 @@ async def start_health_server():
 
 
 def get_new_filename():
-    return f"{DATA_DIR}/data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
+    data_dir = os.getenv("DATA_DIR", DEFAULT_DATA_DIR)
+    return f"{data_dir}/data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
 
 
-def open_new_file():
+def open_new_file(base_path=""):
+    """
+    Opens a new file (locally or in a cloud bucket) and closes the current one if open.
+    :param base_path: The base directory or cloud bucket path.
+    """
     global current_file, lines_written
     lines_written = 0
     if current_file:
         current_file.close()
-    current_file = open(get_new_filename(), "a")
+    filename = get_new_filename()
+    current_file = fsspec.open(filename, "w").open()
+    print(f"Opened new file: {filename}")
 
 
 async def main() -> None:
@@ -84,8 +92,8 @@ async def main() -> None:
     if not os.path.exists(REPORTS_DIR):
         os.makedirs(REPORTS_DIR)
     print("creating data dir")
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
+    if not os.path.exists(DEFAULT_DATA_DIR):
+        os.makedirs(DEFAULT_DATA_DIR)
     print("Starting health server...")
     asyncio.create_task(start_health_server())
     open_new_file()
@@ -242,16 +250,24 @@ async def create_connection():
 
 
 async def create_queue(connection):
+    print(f"Creationg queue {QUEUE_NAME}")
+    print("getting channel")
     channel = await connection.channel()
+    print("declaring exchange")
     publication_exchange = await channel.declare_exchange(
         EXCHANGE_NAME,
         ExchangeType.TOPIC,
         durable=True
     )
-    await channel.set_qos(prefetch_count=os.getenv("AMQP_PREFETCH_COUNT", 10))
+    print("setting qos")
+    prefetch_count = int(os.getenv("AMQP_PREFETCH_COUNT", 10))
+    await channel.set_qos(prefetch_count=prefetch_count)
+    print("declaring queue")
     queue = await channel.declare_queue(QUEUE_NAME, auto_delete=False, exclusive=False,
                                         durable=True)
+    print("binding queue")
     await queue.bind(publication_exchange, QUEUE_TOPIC)
+    print("queue created")
     return queue
 
 

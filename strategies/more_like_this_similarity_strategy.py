@@ -12,6 +12,8 @@ class MoreLikeThisSimilarityStrategy(SyntacticSimilarityStrategy):
     def get_similar_references(
             self, entity: Entity, reference: Reference
     ) -> Generator[Result, None, None]:
+        if not self.initialization_success:
+            return
         fields = ["titles.value", "abstracts.value", "contributors.contributor.name", "subjects.pref_labels.value"]
         query = {
             "query": {

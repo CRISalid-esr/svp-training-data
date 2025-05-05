@@ -22,6 +22,8 @@ class TitleSyntacticSimilarityStrategy(SyntacticSimilarityStrategy):
         """
         Get similar references from the elastic search index
         """
+        if not self.initialization_success:
+            return
         identifier = reference.unique_identifier()
         reference.compute_last_names()
         source_identifier = reference.source_identifier
