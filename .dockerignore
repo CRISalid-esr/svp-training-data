@@ -1,0 +1,9 @@
+venv
+*.jsonl
+.idea
+.gitignore
+authors
+data
+csv_data
+Dockerfile
+poetry*

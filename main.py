@@ -6,6 +6,7 @@ from typing import List
 
 import aio_pika
 from aio_pika import ExchangeType
+from aiohttp import web
 
 from commons.models import Entity, Reference, Contribution, Contributor, Result
 from exclusion_filter import ExclusionFilter
@@ -25,7 +26,7 @@ QUEUE_NAME = "crisalid-ikg-publications"
 
 QUEUE_TOPIC = "event.references.reference.*"
 
-AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
+DEFAULT_AMQP_PARAMS = "amqp://guest:guest@127.0.0.1/"
 
 strategies = [
     NoticeSemanticSimilarityStrategy(),
@@ -37,6 +38,33 @@ strategies = [
 lines_written = 0
 current_file = None
 report_builders = {}
+rabbitmq_connected = False
+
+
+def get_amqp_params():
+    if all([os.getenv("AMQP_USER"), os.getenv("AMQP_PASSWORD"), os.getenv("AMQP_HOST"),
+            os.getenv("AMQP_PORT")]):
+        return f"amqp://{os.getenv('AMQP_USER')}:{os.getenv('AMQP_PASSWORD')}@{os.getenv('AMQP_HOST')}:{os.getenv('AMQP_PORT')}/"
+    return DEFAULT_AMQP_PARAMS
+
+
+# Health check endpoint
+async def health_check(request):
+    global rabbitmq_connected
+    if rabbitmq_connected:
+        return web.Response(text="OK")
+    else:
+        return web.Response(status=503, text="RabbitMQ connection lost")
+
+
+async def start_health_server():
+    app = web.Application()
+    app.router.add_get('/health', health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=8080)
+    await site.start()
+    print("Health server running on port 8080")
 
 
 def get_new_filename():
@@ -58,6 +86,8 @@ async def main() -> None:
     print("creating data dir")
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
+    print("Starting health server...")
+    asyncio.create_task(start_health_server())
     open_new_file()
     connection = await create_connection()
     print("connecting")
@@ -184,9 +214,30 @@ def extract_information(message) -> tuple[Entity, Reference]:
 
 
 async def create_connection():
+    global rabbitmq_connected
+
     connection = await aio_pika.connect_robust(
-        AMQP_PARAMS,
+        get_amqp_params(),
     )
+
+    def on_close(sender, exc):
+        global rabbitmq_connected
+        rabbitmq_connected = False
+        print(f"RabbitMQ connection lost: {exc}")
+
+    def on_reconnect(sender):
+        global rabbitmq_connected
+        rabbitmq_connected = True
+        print("RabbitMQ reconnected")
+
+    # Attach event handlers
+    connection.close_callbacks.add(on_close)
+    connection.reconnect_callbacks.add(on_reconnect)
+
+    # Set initial state
+    rabbitmq_connected = True
+    print("RabbitMQ connection established")
+
     return connection
 
 
@@ -197,7 +248,7 @@ async def create_queue(connection):
         ExchangeType.TOPIC,
         durable=True
     )
-    await channel.set_qos(prefetch_count=20)
+    await channel.set_qos(prefetch_count=os.getenv("AMQP_PREFETCH_COUNT", 10))
     queue = await channel.declare_queue(QUEUE_NAME, auto_delete=False, exclusive=False,
                                         durable=True)
     await queue.bind(publication_exchange, QUEUE_TOPIC)
