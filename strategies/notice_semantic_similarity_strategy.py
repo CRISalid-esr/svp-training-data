@@ -1,5 +1,6 @@
 from typing import Generator
 
+from elasticsearch import Elasticsearch
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 
@@ -15,21 +16,30 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
 
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
-        es_params = ESParams()
-        print("***********debug info***********")
-        print(es_params.url)
-        print(es_params.user)
-        print(es_params.password)
-        print("***********debug info***********")
-        self.elastic_vector_search = ElasticsearchStore(
-            es_url=es_params.url,
-            index_name=ES_INDEX,
-            embedding=self.embeddings,
-            es_user=es_params.user,
-            es_password=es_params.password
-        )
+        self.initialization_success = False
+        params = ESParams()
+        try:
+            es_connection = Elasticsearch(
+                [params.url],
+                http_auth=(params.user, params.password),
+                verify_certs=False,
+            )
+            self.elastic_vector_search = ElasticsearchStore(
+                index_name=ES_INDEX,
+                embedding=self.embeddings,
+                es_connection=es_connection
+            )
+            self.initialization_success = True
+        except Exception as e:
+            print(f"Error connecting to ES: {e}")
+            # display connexion parameters for debugging
+            print(f"ES URL: {params.url}")
+            print(f"ES User: {params.user}")
+            print(f"ES Password: {params.password}")
 
     def load_reference(self, entity: Entity, reference: Reference):
+        if not self.initialization_success:
+            return
         identifier = reference.unique_identifier()
         summary = self._build_summary(entity, reference)
         metadata = reference.dict() | {"id": identifier}
@@ -60,6 +70,8 @@ class NoticeSemanticSimilarityStrategy(SimilarityStrategy):
 
     def get_similar_references(self, entity: dict, reference: dict) -> Generator[
         Result, None, None]:
+        if not self.initialization_success:
+            return
         identifier = reference.unique_identifier()
         summary = self._build_summary(entity, reference)
         search_results = self.elastic_vector_search.similarity_search_with_score(summary, k=20)

@@ -186,20 +186,32 @@ class SyntacticSimilarityStrategy(SimilarityStrategy):
     }
 
     def __init__(self):
+        self.initialization_success = False
         params = ESParams()
-        self.es = Elasticsearch(
-            [params.url],
-            http_auth=(params.user, params.password),
-            verify_certs=True,
-        )
-        if not self.es.indices.exists(index=self.ES_INDEX):
-            self.es.indices.create(index=self.ES_INDEX, mappings=self.ES_INDEX_MAPPING,
-                                   settings=self.ES_INDEX_SETTINGS)
+        try:
+            self.es = Elasticsearch(
+                [params.url],
+                http_auth=(params.user, params.password),
+                verify_certs=False,
+            )
+            if not self.es.indices.exists(index=self.ES_INDEX):
+                self.es.indices.create(index=self.ES_INDEX, mappings=self.ES_INDEX_MAPPING,
+                                       settings=self.ES_INDEX_SETTINGS)
+
+            self.initialization_success = True
+        except Exception as e:
+            print(f"Error connecting to ES: {e}")
+            # display connexion parameters for debugging
+            print(f"ES URL: {params.url}")
+            print(f"ES User: {params.user}")
+            print(f"ES Password: {params.password}")
 
     def load_reference(self, entity: Entity, reference: Reference):
         """
         Add the reference to the elastic search index
         """
+        if not self.initialization_success:
+            return
         identifier = reference.unique_identifier()
         reference.compute_last_names()
         metadata = reference.dict() | {"id": identifier}
