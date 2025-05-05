@@ -101,7 +101,7 @@ class Reference(BaseModel):
     issued: Optional[datetime] = None
     created: Optional[datetime] = None
     issue: Optional[Issue] = None
-    pages: Optional[str] = None
+    page: Optional[str] = None
     book: Optional[Book] = None
 
     def compute_last_names(self)-> None:
@@ -184,8 +184,8 @@ class Reference(BaseModel):
                  other_reference.issue.volume] if other_reference.issue and other_reference.issue.volume else []),
             ("Number", self.issue.number if self.issue and self.issue.number else [],
              other_reference.issue.number if other_reference.issue and other_reference.issue.number else []),
-            ("Pages", [self.pages] if self.pages else [],
-             [other_reference.pages] if other_reference.pages else []),
+            ("Pages", [self.page] if self.page else [],
+             [other_reference.page] if other_reference.page else []),
             ("Manifestations",
              [f"{manifestation.page}" for manifestation in (self.manifestations or [])],
              [f"{manifestation.page}" for manifestation in (other_reference.manifestations or [])]),
