@@ -4,6 +4,7 @@ from typing import List, Optional
 from nameparser import HumanName
 from pydantic import BaseModel
 
+from commons.relators import RELATOR_URI_TO_LABEL, extract_relator_code
 
 class ReferenceIdentifier(BaseModel):
     type: str
@@ -78,6 +79,7 @@ class Concept(BaseModel):
     pref_labels: List[PrefLabel]
     alt_labels: List[AltLabel]
 
+
 class Book(BaseModel):
     title: str | None = None
     title_variants: list[str] = []
@@ -104,8 +106,8 @@ class Reference(BaseModel):
     page: Optional[str] = None
     book: Optional[Book] = None
 
-    def compute_last_names(self)-> None:
-        #use HumanName to populate the last_name field of each contributor
+    def compute_last_names(self) -> None:
+        # use HumanName to populate the last_name field of each contributor
         for contribution in self.contributions:
             if contribution.contributor.name:
                 contribution.contributor.last_name = HumanName(contribution.contributor.name).last
@@ -180,12 +182,14 @@ class Reference(BaseModel):
              list(set([doc_type.label for doc_type in other_reference.document_type]))),
             ("Contributions",
              [
-                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
-                 for contribution in self.contributions],
+                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {RELATOR_URI_TO_LABEL.get(extract_relator_code(contribution.role), contribution.role or 'Unknown')}"
+                 for contribution in self.contributions
+             ],
              [
-                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {contribution.role or 'Unknown'}"
-                 for contribution in
-                 other_reference.contributions]),
+                 f"{contribution.contributor.name or contribution.contributor.source_identifier}, role: {RELATOR_URI_TO_LABEL.get(extract_relator_code(contribution.role), contribution.role or 'Unknown')}"
+                 for contribution in other_reference.contributions
+             ]),
+
             ("Origin", [f"{self.harvester} / {self.source_identifier}"],
              [f"{other_reference.harvester} / {other_reference.source_identifier}"]),
             ("Publication Date", [self.issued.strftime("%d-%m-%Y") if self.issued else ""],
