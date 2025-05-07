@@ -132,40 +132,6 @@ class Reference(BaseModel):
              (other_reference.identifiers or [])]))
         table_html += "    </tr>\n"
 
-        # Add Book Title and Publisher if available
-        def get_book_info_html(reference):
-            if not reference.book:
-                return ""
-            parts = []
-            if reference.book.title:
-                parts.append(f"<strong>Title:</strong> {reference.book.title}")
-            if reference.book.publisher:
-                parts.append(f"<strong>Publisher:</strong> {reference.book.publisher}")
-            return "</br>".join(parts)
-
-        table_html += "    <tr>\n"
-        table_html += "        <td>Book Info</td>\n"
-        table_html += f"        <td>{get_book_info_html(self)}</td>\n"
-        table_html += f"        <td>{get_book_info_html(other_reference)}</td>\n"
-        table_html += "    </tr>\n"
-
-        # Add ISBN section if applicable
-        def get_isbn_html(reference):
-            if not reference.book:
-                return ""
-            isbn_parts = []
-            if hasattr(reference.book, "isbn10") and reference.book.isbn10:
-                isbn_parts.append(f"ISBN-10: {reference.book.isbn10}")
-            if hasattr(reference.book, "isbn13") and reference.book.isbn13:
-                isbn_parts.append(f"ISBN-13: {reference.book.isbn13}")
-            return "</br>".join(isbn_parts)
-
-        table_html += "    <tr>\n"
-        table_html += "        <td>ISBN</td>\n"
-        table_html += f"        <td>{get_isbn_html(self)}</td>\n"
-        table_html += f"        <td>{get_isbn_html(other_reference)}</td>\n"
-        table_html += "    </tr>\n"
-
         # Add other fields
         fields = [
             ("Title(s)", [title.value for title in self.titles],
@@ -218,6 +184,40 @@ class Reference(BaseModel):
             table_html += "        <td>{}</td>\n".format("</br>".join(values1))
             table_html += "        <td>{}</td>\n".format("</br>".join(values2))
             table_html += "    </tr>\n"
+
+        # Add Book Title and Publisher if available
+        def get_book_info_html(reference):
+            if not reference.book:
+                return ""
+            parts = []
+            if reference.book.title:
+                parts.append(f"<strong>Title:</strong> {reference.book.title}")
+            if reference.book.publisher:
+                parts.append(f"<strong>Publisher:</strong> {reference.book.publisher}")
+            return "</br>".join(parts)
+
+        table_html += "    <tr>\n"
+        table_html += "        <td>Book Info</td>\n"
+        table_html += f"        <td>{get_book_info_html(self)}</td>\n"
+        table_html += f"        <td>{get_book_info_html(other_reference)}</td>\n"
+        table_html += "    </tr>\n"
+
+        # Add ISBN section if applicable
+        def get_isbn_html(reference):
+            if not reference.book:
+                return ""
+            isbn_parts = []
+            if hasattr(reference.book, "isbn10") and reference.book.isbn10:
+                isbn_parts.append(f"ISBN-10: {reference.book.isbn10}")
+            if hasattr(reference.book, "isbn13") and reference.book.isbn13:
+                isbn_parts.append(f"ISBN-13: {reference.book.isbn13}")
+            return "</br>".join(isbn_parts)
+
+        table_html += "    <tr>\n"
+        table_html += "        <td>ISBN</td>\n"
+        table_html += f"        <td>{get_isbn_html(self)}</td>\n"
+        table_html += f"        <td>{get_isbn_html(other_reference)}</td>\n"
+        table_html += "    </tr>\n"
 
         # Add similarity strategies row
         if strategies:
